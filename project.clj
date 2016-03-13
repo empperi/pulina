@@ -4,16 +4,24 @@
   "0.1.0-SNAPSHOT"
   :dependencies
   [[org.clojure/clojure "1.8.0"]
-   [org.clojure/clojurescript "1.7.228"]
+   [org.clojure/clojurescript "1.7.228" :scope "test"]
    [org.clojure/core.async "0.2.374"]
    [collin/puu "0.2.0-SNAPSHOT"]
    [mount "0.1.10"]
    [http-kit "2.1.18"]
+   [compojure "1.5.0"]
+   [hiccup "1.0.5"]
+   [garden "1.3.2"]
    [adzerk/boot-test "1.1.0" :scope "test"]
    [adzerk/boot-cljs "1.7.228-1" :scope "test"]
+   [adzerk/boot-reload "0.4.5" :scope "test"]
+   [com.cemerick/piggieback "0.2.1" :scope "test"]
+   [weasel "0.7.0" :scope "test"]
+   [adzerk/boot-cljs-repl "0.3.0" :scope "test"]
+   [org.clojure/tools.nrepl "0.2.12" :scope "test"]
    [crisptrutski/boot-cljs-test "0.2.2-SNAPSHOT" :scope "test"]
    [instaparse "1.4.1" :scope "test"]]
   :source-paths
-  ["test/clj" "test/cljs" "src/cljs" "test/cljc" "src/cljc" "src/clj"]
+  ["src/cljs" "src/cljc" "src/clj"]
   :test-paths
   ["test/clj" "test/cljs" "test/cljc"])

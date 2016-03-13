@@ -3,13 +3,21 @@
   :test-paths     #{"test/clj" "test/cljc" "test/cljs"}
   :resource-paths #{"resources"}
   :dependencies '[[org.clojure/clojure "1.8.0"]
-                  [org.clojure/clojurescript "1.7.228"]
+                  [org.clojure/clojurescript "1.7.228" :scope "test"]
                   [org.clojure/core.async "0.2.374"]
                   [collin/puu "0.2.0-SNAPSHOT"]
                   [mount "0.1.10"]
                   [http-kit "2.1.18"]
+                  [compojure "1.5.0"]
+                  [hiccup "1.0.5"]
+                  [garden "1.3.2"]
                   [adzerk/boot-test "1.1.0" :scope "test"]
                   [adzerk/boot-cljs "1.7.228-1" :scope "test"]
+                  [adzerk/boot-reload "0.4.5" :scope "test"]
+                  [com.cemerick/piggieback "0.2.1" :scope "test"]
+                  [weasel "0.7.0" :scope "test"]
+                  [adzerk/boot-cljs-repl "0.3.0" :scope "test"]
+                  [org.clojure/tools.nrepl "0.2.12" :scope "test"]
                   [crisptrutski/boot-cljs-test "0.2.2-SNAPSHOT" :scope "test"]
                   [instaparse "1.4.1" :scope "test"]])
 
@@ -21,7 +29,9 @@
   '[instaparse.core :as insta]
   '[clojure.edn :as edn]
   '[crisptrutski.boot-cljs-test :refer [test-cljs prep-cljs-tests run-cljs-tests]]
-  '[adzerk.boot-cljs :refer [cljs]])
+  '[adzerk.boot-cljs :refer [cljs]]
+  '[adzerk.boot-cljs-repl :refer [cljs-repl start-repl repl-env]]
+  '[adzerk.boot-reload :refer [reload]])
 
 (def project-info-path "./resources/project-info.edn")
 (defn project [] (edn/read-string (slurp project-info-path)))
@@ -48,6 +58,14 @@
                            [:dependencies (get-env :dependencies)
                             :source-paths (vec (get-env :source-paths))
                             :test-paths   (vec (get-env :test-paths))]))))))
+
+(defn- jar-name []
+  (let [{v :version} (project)]
+    (format "pulina-%s.%s.%s%s.jar"
+            (:major v)
+            (:minor v)
+            (:hotfix v)
+            (if (:snapshot v) "-SNAPSHOT" ""))))
 
 (deftask lein-generate
   "Generate a leiningen `project.clj` file for mainly to be used with Cursive."
@@ -79,73 +97,20 @@
 (deftask package
   "Builds an application artifact for the current version (no promotions)."
   []
-  (comp (pulina-pom)
-        (aot)
-        (jar :file (let [{v :version} (project)]
-                     (format "pulina-%s.%s.%s%s.jar"
-                             (:major v)
-                             (:minor v)
-                             (:hotfix v)
-                             (if (:snapshot v) "-SNAPSHOT" ""))))
-        (target)))
-
-(deftask build
-  "Runs tests, creates a package and installs it into local M2 repository."
-  []
-  (comp (test)
-        (package)
-        (built-in/install)))
-
-(deftask promote
-  "Promotes version"
-  [m major bool "Major version (x in x.y.z)"
-   i minor bool "Minor version (y in x.y.z)"
-   f hotfix bool "Hotfix version (z in x.y.z)"
-   s snapshot bool "Should promotion be a snapshot version?"]
-  (fn [next-handler]
-    (fn [fileset]
-      (if (< 1 (count (filter true? (vals (select-keys *opts* [:major :minor :hotfix])))))
-        (boot.util/fail "Only one of major, minor or hotfix can be promoted at once\n")
-        (let [proj (project)
-              v (:version proj)
-              new-v (cond
-                      (true? (:major *opts*)) {:major (inc (:major v)) :minor 0 :hotfix 0}
-                      (true? (:minor *opts*)) {:major (:major v) :minor (inc (:minor v)) :hotfix 0}
-                      (true? (:hotfix *opts*)) {:major (:major v) :minor (:minor v) :hotfix (inc (:hotfix v))}
-                      :default v)
-              final-v (if (:snapshot *opts*)
-                        (assoc new-v :snapshot true)
-                        (assoc new-v :snapshot false))]
-          (boot.util/info "Promoting to %s\n" (project-version->str final-v))
-          (spit (clojure.java.io/file project-info-path) (assoc-in proj [:version] final-v))))
-      (next-handler fileset))))
-
-(deftask snapshot
-  "Creates a new snapshot version promotion."
-  [m major bool "Major version (x in x.y.z)"
-   i minor bool "Minor version (y in x.y.z)"
-   f hotfix bool "Hotfix version (z in x.y.z)"]
-  (comp (apply promote (flatten (seq (assoc *opts* :snapshot true))))
-        (lein-generate)))
-
-(deftask release
-  "Executes tests, promotes the current snapshot version to non-snapshot. Then updates project.clj and builds a release
-   artifact.
-
-   Fails if the current version is not a snapshot when executed."
-  []
-  (if (false? (:snapshot (:version (project))))
-    (boot.util/fail "Current version is not a -SNAPSHOT version, cannot release.\n")
-    (comp (test)
-          (promote :snapshot false)
-          (lein-generate)
-          (cljs :optimizations :advanced)
-          (package))))
+  (comp
+    (pulina-pom)
+    (aot)
+    (cljs :ids #{"js/main"} :optimizations :advanced)
+    (uber)
+    (jar :file (jar-name))
+    (target)))
 
 (deftask dev
-  "Starts a watcher for tests and launches nrepl."
+  "Starts cljs watcher and live reload and REPLs for Clojure and ClojureScript code"
   []
-  (comp (repl)
-        (watch)
-        (lein-generate)
-        (test)))
+  (comp
+    (watch)
+    (reload :ids #{"js/main"})
+    (cljs :ids #{"js/main"} :optimizations :none)
+    (cljs-repl :ids #{"js/main"})
+    (repl)))
