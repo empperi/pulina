@@ -7,11 +7,13 @@
    [org.clojure/clojurescript "1.7.228"]
    [org.clojure/core.async "0.2.374"]
    [collin/puu "0.2.0-SNAPSHOT"]
+   [mount "0.1.10"]
+   [http-kit "2.1.18"]
    [adzerk/boot-test "1.1.0" :scope "test"]
    [adzerk/boot-cljs "1.7.228-1" :scope "test"]
    [crisptrutski/boot-cljs-test "0.2.2-SNAPSHOT" :scope "test"]
    [instaparse "1.4.1" :scope "test"]]
   :source-paths
-  ["src/cljs" "src/cljc" "src/clj"]
+  ["test/clj" "test/cljs" "src/cljs" "test/cljc" "src/cljc" "src/clj"]
   :test-paths
   ["test/clj" "test/cljs" "test/cljc"])
