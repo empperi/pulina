@@ -1,0 +1,3 @@
+{:require [pulina.core]
+ :init-fns [pulina.core/start!]
+ :compiler-options {:asset-path "js/main.out"}}

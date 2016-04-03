@@ -1,3 +1,4 @@
 (ns pulina.core)
 
-(.log js/console "Ok, ClojureScript working")
+(defn start! []
+  (.log js/console "Ok, ClojureScript working"))

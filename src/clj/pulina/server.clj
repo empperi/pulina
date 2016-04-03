@@ -5,9 +5,6 @@
             [compojure.route :as r]
             [pulina.pages.index-page :as index]))
 
-(def routes
-  (c/routes (r/resources "/")))
-
 (defn async-handler [ring-request]
   ;; unified API for WebSocket and HTTP long polling/streaming
   (httpkit/with-channel ring-request channel                ; get the channel
@@ -22,5 +19,10 @@
   (c/GET "/" [] index/page)
   (c/GET "/ws" [] async-handler))
 
-(m/defstate server :start (httpkit/run-server all-routes {:port 8080})
+(def routes
+  (c/routes
+    (r/resources "/js" {:root "js"})
+    all-routes))
+
+(m/defstate server :start (httpkit/run-server routes {:port 8080})
                    :stop  (server :timeout 500))
