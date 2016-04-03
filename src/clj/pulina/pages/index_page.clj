@@ -15,7 +15,7 @@
       [:title "Pulina Chat"]
       [:style styles]]
      [:body
-      [:p "It makes pulina!"]
+      [:div#app]
       (p/include-js "js/main.js")]]))
 
 
