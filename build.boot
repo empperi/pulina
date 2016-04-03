@@ -46,7 +46,8 @@
 (task-options!
   aot {:namespace #{'pulina.core}}
   cljs {:source-map true}
-  test-cljs {:js-env :phantom})
+  test-cljs {:js-env :phantom}
+  jar {:main 'pulina.core})
 
 (defn- generate-lein-project-file! [& {:keys [keep-project] :or {:keep-project true}}]
   (let [pfile (clojure.java.io/file "project.clj")
