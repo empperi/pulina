@@ -19,9 +19,11 @@
 
 ;; -- Entry Point -------------------------------------------------------------
 
+(defn render!
+  []
+  (reagent/render [pulina-app-view] (js/document.getElementById "app")))
 
 (defn ^:export start!
   []
   (dispatch-sync [:initialize])
-  (reagent/render [pulina-app-view]
-                  (js/document.getElementById "app")))
+  (render!))

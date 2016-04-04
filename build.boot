@@ -114,7 +114,7 @@
   (comp
     (repl)
     (watch)
-    (reload)
+    (reload :on-jsload 'pulina.core/render!)
     #_(cljs-repl :ids #{"js/main"})
     (cljs :optimizations :none)
     (target)))
