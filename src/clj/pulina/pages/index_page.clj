@@ -1,19 +1,14 @@
 (ns pulina.pages.index-page
   (:require [hiccup.core :as h]
             [hiccup.page :as p]
-            [garden.core :as g]
             [ring.util.response :as r]))
-
-(def styles
-  (g/css
-    [:body {:font-family "Helvetica"}]))
 
 (defn page-content []
   (p/html5
     [:html
      [:head
       [:title "Pulina Chat"]
-      [:style styles]]
+      [:link {:href "css/main.css" :rel "stylesheet" :type "text/css"}]]
      [:body
       [:div#app]
       (p/include-js "js/main.js")]]))

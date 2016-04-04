@@ -22,6 +22,7 @@
 (def routes
   (c/routes
     (r/resources "/js" {:root "js"})
+    (r/resources "/css" {:root "css"})
     all-routes))
 
 (m/defstate server :start (httpkit/run-server routes {:port 8080})

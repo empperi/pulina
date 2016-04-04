@@ -13,6 +13,7 @@
                   [garden "1.3.2"]
                   [re-frame "0.7.0"]
                   [adzerk/boot-test "1.1.0" :scope "test"]
+                  [org.martinklepsch/boot-garden "1.3.0-0" :scope "test"]
                   [adzerk/boot-cljs "1.7.228-1" :scope "test"]
                   [adzerk/boot-reload "0.4.7" :scope "test"]
                   [com.cemerick/piggieback "0.2.1" :scope "test"]
@@ -33,7 +34,8 @@
   '[crisptrutski.boot-cljs-test :refer [test-cljs prep-cljs-tests run-cljs-tests]]
   '[adzerk.boot-cljs :refer [cljs]]
   '[adzerk.boot-cljs-repl :refer [cljs-repl start-repl repl-env]]
-  '[adzerk.boot-reload :refer [reload]])
+  '[adzerk.boot-reload :refer [reload]]
+  '[org.martinklepsch.boot-garden :refer [garden]])
 
 (def project-info-path "./resources/project-info.edn")
 (defn project [] (edn/read-string (slurp project-info-path)))
@@ -104,6 +106,7 @@
     (pulina-pom)
     (aot)
     (cljs :ids #{"js/main"} :optimizations :advanced)
+    (garden :styles-var 'pulina.styles.base/all :output-to "css/main.css")
     (uber)
     (jar :file (jar-name))
     (target)))
@@ -117,4 +120,5 @@
     (reload :on-jsload 'pulina.core/render!)
     #_(cljs-repl :ids #{"js/main"})
     (cljs :optimizations :none)
+    (garden :styles-var 'pulina.styles.base/all :output-to "css/main.css")
     (target)))
