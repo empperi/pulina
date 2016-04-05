@@ -1,6 +1,8 @@
 (ns pulina.events
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [reagent.core :as reagent]
+            [clojure.string :as st]
+            [com.rpl.specter :as sp]
             [re-frame.core :refer [register-handler
                                    path
                                    register-sub
@@ -31,3 +33,14 @@
                                   (if (= (:name c) (:name channel))
                                     (assoc-in c [:active?] true)
                                     (assoc-in c [:active?] false)))))))
+
+(register-handler
+  :new-message
+  (fn
+    [db [_ {:keys [name]} msg]]
+    (if (> (count (st/trim msg)) 0)
+      (sp/transform
+        [:channels sp/ALL #(= name (:name %)) :messages]
+        #(conj % msg)
+        db)
+      db)))

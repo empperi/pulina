@@ -12,6 +12,7 @@
                   [hiccup "1.0.5"]
                   [garden "1.3.2"]
                   [re-frame "0.7.0"]
+                  [com.rpl/specter "0.9.2"]
                   [adzerk/boot-test "1.1.0" :scope "test"]
                   [org.martinklepsch/boot-garden "1.3.0-0" :scope "test"]
                   [adzerk/boot-cljs "1.7.228-1" :scope "test"]

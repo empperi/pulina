@@ -14,7 +14,9 @@
   []
   [:div#view
    [view/chat-channels]
-   [view/messages-list]])
+   [:div#messages
+    [view/messages-list]
+    [view/message-input]]])
 
 
 ;; -- Entry Point -------------------------------------------------------------
