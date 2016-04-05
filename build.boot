@@ -115,7 +115,7 @@
   "Starts cljs watcher and live reload and REPLs for Clojure and ClojureScript code"
   []
   (comp
-    (repl)
+    (repl :init-ns 'pulina.core)
     (watch)
     (reload :on-jsload 'pulina.core/render!)
     #_(cljs-repl :ids #{"js/main"})
