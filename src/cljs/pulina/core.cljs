@@ -12,7 +12,7 @@
 
 (defn pulina-app-view
   []
-  [:div
+  [:div#view
    [view/chat-channels]
    [view/messages-list]])
 
@@ -21,7 +21,7 @@
 
 (defn render!
   []
-  (reagent/render [pulina-app-view] (js/document.getElementById "app")))
+  (reagent/render [pulina-app-view] (.getElementById js/document "app")))
 
 (defn ^:export start!
   []
