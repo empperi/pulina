@@ -4,7 +4,8 @@
             [re-frame.core :refer [dispatch-sync]]
             [pulina.view-components :as view]
             [pulina.subscriptions]
-            [pulina.events]))
+            [pulina.events]
+            [pulina.data.data-syncer]))
 
 (enable-console-print!)
 
