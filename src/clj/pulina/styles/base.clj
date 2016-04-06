@@ -42,10 +42,9 @@
         :flex-grow      1}
        [:.channels (none-list
                      {:order            1
-                      :width            "140px"
                       :border-right     "1px solid black"
                       :background-color bg-color-dark})])
-     (chan-btn {:width "100%"
+     (chan-btn {:width  "140px"
                 :height "1.8rem"})
      (messages
        {:order            1
