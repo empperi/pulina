@@ -12,3 +12,5 @@
   (def chsk-send! send-fn)
   (def chsk-state state))
 
+(defn send-msg! [chan-name msg]
+  (chsk-send! [:event/new-msg [chan-name msg]]))

@@ -3,6 +3,7 @@
   (:require [reagent.core :as reagent]
             [clojure.string :as st]
             [com.rpl.specter :as sp]
+            [pulina.data.data-syncer :as syncer]
             [re-frame.core :refer [register-handler
                                    path
                                    register-sub
@@ -35,12 +36,21 @@
                                     (assoc-in c [:active?] false)))))))
 
 (register-handler
+  :sending-message
+  (fn
+    [db [_ chan-name msg]]
+    (syncer/send-msg! chan-name msg)
+    db))
+
+(register-handler
   :new-message
   (fn
     [db [_ {:keys [name]} msg]]
     (if (> (count (st/trim msg)) 0)
-      (sp/transform
-        [:channels sp/ALL #(= name (:name %)) :messages]
-        #(conj % msg)
-        db)
+      (do
+        (dispatch [:sending-message name msg])
+        (sp/transform
+          [:channels sp/ALL #(= name (:name %)) :messages]
+          #(conj % msg)
+          db))
       db)))

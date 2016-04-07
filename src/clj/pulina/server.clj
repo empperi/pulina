@@ -3,13 +3,11 @@
             [org.httpkit.server :as httpkit]
             [compojure.core :as c]
             [compojure.route :as r]
-            [taoensso.sente :as sente]
             [taoensso.sente.server-adapters.http-kit :refer [sente-web-server-adapter]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.params :refer [wrap-params]]
             [pulina.pages.index-page :as index]
-            [pulina.data.datamodel :as datamodel]
-            [clojure.core.async :as async :refer [<! <!! >! >!! put! chan go go-loop]]))
+            [pulina.data.datamodel :as datamodel]))
 
 (let [{:keys [get-ws-handler post-handler]} (datamodel/route-handlers)]
   (c/defroutes handlers
