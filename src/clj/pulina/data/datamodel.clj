@@ -2,18 +2,14 @@
   (:require [mount.core :as m]
             [taoensso.sente :as sente]
             [com.rpl.specter :as sp]
+            [taoensso.timbre :as tre]
             [taoensso.sente.server-adapters.http-kit :refer [sente-web-server-adapter]]
             [clojure.core.async :as async :refer [<! <!! >! >!! put! chan go go-loop]]
             [puu.model :as puu]))
 
-(def mgr
-  (puu/manager
-    "chat-mgr"
-    (puu/model
-      {:channels [{:name "Channel 1" :messages ["Lol" "noob"]}
-                  {:name "Channel 2" :messages ["Trololo"]}
-                  {:name "Channel 3" :messages ["Whatta hell bro?" "Muchos gracias"]}]})))
+(def ignored-dispatch-ids #{:chsk/uidport-open :chsk/ws-ping})
 
+(def mgr (puu/manager "chat-mgr" (puu/model {})))
 (def changes (puu/subscribe mgr (chan)))
 
 (let [{:keys [ch-recv send-fn ajax-post-fn ajax-get-or-ws-handshake-fn connected-uids]}
@@ -52,9 +48,24 @@
         #(conj % msg)
         x))))
 
+(defmethod dispatch! :event/new-chan
+  [{[chan-name] :?data}]
+  (tre/info "Creating a new Channel:" chan-name)
+  (puu/do-tx
+    mgr
+    (fn [x]
+      (if (->> x
+               :channels
+               (filter (fn [c] (= chan-name (:name c))))
+               first
+               some?)
+        x
+        (update-in x [:channels] conj {:name chan-name :messages []})))))
+
 (defmethod dispatch! :default
-  [_]
-  (comment "ignore"))
+  [{id :id}]
+  (when (nil? (ignored-dispatch-ids id))
+    (tre/warn "Unknown dispatch value:" id)))
 
 (defn start-receiver! []
   (go-loop [i 0]

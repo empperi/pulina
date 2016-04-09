@@ -79,6 +79,9 @@
 (defn send-msg! [chan-name msg]
   (chsk-send! [:event/new-msg [chan-name msg]]))
 
+(defn create-channel! [chan-name]
+  (chsk-send! [:event/new-chan [chan-name]]))
+
 (m/defstate receiver :start (start-receiver!)
                      :stop  (async/close! @receiver))
 

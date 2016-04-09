@@ -14,11 +14,13 @@
 
 (defn pulina-app-view
   []
-  [:div#view
-   [view/chat-channels]
-   [:div#messages
-    [view/messages-list]
-    [view/message-input]]])
+  [:div#content
+   [view/header]
+   [:div#view
+    [view/chat-channels]
+    [:div#messages
+     [view/messages-list]
+     [view/message-input]]]])
 
 
 ;; -- Entry Point -------------------------------------------------------------

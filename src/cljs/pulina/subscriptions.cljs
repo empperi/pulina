@@ -8,7 +8,11 @@
                                    dispatch-sync
                                    subscribe]]))
 
-(defn channel-for? [n] (fn [c] (= n (:name c))))
+(defn name-for? [n] (fn [c] (= n (:name c))))
+
+(defn- active-channel [db]
+  (let [active (reaction (:active-channel @db))]
+    (reaction (first (filter (name-for? @active) (:channels @db))))))
 
 (register-sub
   :channels
@@ -20,13 +24,24 @@
   :active-channel
   (fn
     [db _]
-    (let [active (reaction (:active-channel @db))]
-      (reaction (first (filter (channel-for? @active) (:channels @db)))))))
+    (active-channel db)))
 
 (register-sub
   :messages
   (fn
     [db _]
-    (let [active-channel-name (reaction (:active-channel @db))
-          active-channel      (reaction (first (filter (channel-for? @active-channel-name) (:channels @db))))]
+    (let [active-channel (active-channel db)]
       (reaction (:messages @active-channel)))))
+
+(register-sub
+  :users
+  (fn
+    [db _]
+    (reaction (:users @db))))
+
+(register-sub
+  :current-user
+  (fn
+    [db _]
+    (let [current-user (reaction (:current-user @db))]
+      (reaction (first (filter (name-for? @current-user) (:users @db)))))))

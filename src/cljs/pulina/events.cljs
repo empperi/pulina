@@ -56,10 +56,25 @@
   (fn
     [db [_ {:keys [name]} msg]]
     (when (> (count (st/trim msg)) 0)
-      (do
-        (dispatch [:sending-message name msg])
-        #_(sp/transform
-          [:channels sp/ALL #(= name (:name %)) :messages]
-          #(conj % msg)
-          db)))
+      (dispatch [:sending-message name msg]))
+    db))
+
+(register-handler
+  :new-channel
+  (fn
+    [db [_ chan-name]]
+    (syncer/create-channel! chan-name)
+    db))
+
+(register-handler
+  :join-channel
+  (fn
+    [db [_ chan-name]]
+    (tre/info "Joining channel" chan-name)
+    (when (nil? (->> db
+                     :channels
+                     (filter (fn [c] (= chan-name (:name c))))
+                     first))
+      (dispatch [:new-channel chan-name]))
+    (dispatch [:channel-selected {:name chan-name}])
     db))
