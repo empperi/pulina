@@ -9,31 +9,40 @@
                                    register-sub
                                    dispatch
                                    dispatch-sync
-                                   subscribe]]))
+                                   subscribe]]
+            [taoensso.timbre :as tre]))
+
+(def server-data-keys #{:channels})
 
 (def initial-state
-  {:channels [{:name "Channel 1" :active? true :messages ["Lol" "noob"]}
-              {:name "Channel 2" :active? false :messages ["Trololo"]}
-              {:name "Channel 3" :active? false :messages ["Whatta hell bro?" "Muchos gracias"]}]})
+  {:active-channel nil
+   :channels       []})
 
-;; -- Event Handlers ----------------------------------------------------------
-
-
-(register-handler                 ;; setup initial state
-  :initialize                     ;; usage:  (dispatch [:initialize])
+(register-handler
+  :initialize
   (fn
     [db _]
-    (merge db initial-state)))    ;; what it returns becomes the new state
+    (merge db initial-state)))
 
 (register-handler
   :channel-selected
   (fn
     [db [_ channel]]
-    (update-in db [:channels] (fn [chans]
-                                (for [c chans]
-                                  (if (= (:name c) (:name channel))
-                                    (assoc-in c [:active?] true)
-                                    (assoc-in c [:active?] false)))))))
+    (tre/debug "Changing channel:" (:name channel))
+    (assoc-in db [:active-channel] (:name channel))))
+
+(register-handler
+  :server-data
+  (fn
+    [db [_ data]]
+    (let [init? (empty? (:channels db))
+          res (reduce
+                (fn [d k] (assoc d k (k data)))
+                db
+                server-data-keys)]
+      (when init?
+        (dispatch [:channel-selected (first (:channels res))]))
+      res)))
 
 (register-handler
   :sending-message
@@ -46,11 +55,11 @@
   :new-message
   (fn
     [db [_ {:keys [name]} msg]]
-    (if (> (count (st/trim msg)) 0)
+    (when (> (count (st/trim msg)) 0)
       (do
         (dispatch [:sending-message name msg])
-        (sp/transform
+        #_(sp/transform
           [:channels sp/ALL #(= name (:name %)) :messages]
           #(conj % msg)
-          db))
-      db)))
+          db)))
+    db))

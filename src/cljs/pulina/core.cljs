@@ -1,6 +1,7 @@
 (ns pulina.core
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [reagent.core :as reagent]
+            [mount.core :as m]
             [re-frame.core :refer [dispatch-sync]]
             [pulina.view-components :as view]
             [pulina.subscriptions]
@@ -29,4 +30,5 @@
 (defn ^:export start!
   []
   (dispatch-sync [:initialize])
+  (m/start)
   (render!))

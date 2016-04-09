@@ -30,24 +30,39 @@
 
 (defn start-broadcaster! []
   (go-loop [i 0]
-    (let [d (<!! changes)]
-      (println "Change: " d))
+    (let [d (<!! changes)
+          v (puu/version d)]
+      (doseq [uid (:any @connected-uids)]
+        (chsk-send! uid [:model/changes (puu/version-changes mgr (dec v) v)])))
     (recur (inc i))))
+
+(defmulti dispatch! :id)
+
+(defmethod dispatch! :model/all
+  [{uid :uid}]
+  (chsk-send! uid [:model/all (puu/model->map (puu/get-version mgr :latest))]))
+
+(defmethod dispatch! :event/new-msg
+  [{[chan-name msg] :?data}]
+  (puu/do-tx
+    mgr
+    (fn [x]
+      (sp/transform
+        [:channels sp/ALL #(= chan-name (:name %)) :messages]
+        #(conj % msg)
+        x))))
+
+(defmethod dispatch! :default
+  [_]
+  (comment "ignore"))
 
 (defn start-receiver! []
   (go-loop [i 0]
-    (let [{id :id [chan-name msg] :?data} (<!! ch-chsk)]
-      (puu/do-tx
-        mgr
-        (fn [x]
-          (sp/transform
-            [:channels sp/ALL #(= chan-name (:name %)) :messages]
-            #(conj % msg)
-            x))))
+    (dispatch! (<!! ch-chsk))
     (recur (inc i))))
 
 (m/defstate broadcaster :start (start-broadcaster!)
-                        :stop  identity #_(async/close! broadcaster))
+                        :stop  (async/close! broadcaster))
 
 (m/defstate receiver :start (start-receiver!)
-                     :stop  identity #_(async/close! receiver))
+                     :stop  (async/close! receiver))

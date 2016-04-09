@@ -14,6 +14,7 @@
                   [re-frame "0.7.0"]
                   [com.rpl/specter "0.9.2"]
                   [com.taoensso/sente "1.8.1"]
+                  [com.taoensso/timbre "4.3.1"]
                   [adzerk/boot-test "1.1.0" :scope "test"]
                   [org.martinklepsch/boot-garden "1.3.0-0" :scope "test"]
                   [adzerk/boot-cljs "1.7.228-1" :scope "test"]
