@@ -21,7 +21,6 @@
   (fn
     [db _]
     (let [active (reaction (:active-channel @db))]
-      (println active)
       (reaction (first (filter (channel-for? @active) (:channels @db)))))))
 
 (register-sub

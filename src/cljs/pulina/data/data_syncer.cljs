@@ -72,7 +72,7 @@
 (defn start-broadcaster! []
   (go-loop [i 0]
     (let [d (<! changes)]
-      (tre/debug "Triggered change" @d)
+      (tre/trace "Triggered change" @d)
       (dispatch [:server-data @d]))
     (recur (inc i))))
 
