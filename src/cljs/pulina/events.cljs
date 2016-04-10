@@ -78,3 +78,17 @@
       (dispatch [:new-channel chan-name]))
     (dispatch [:channel-selected {:name chan-name}])
     db))
+
+(register-handler
+  :login
+  (fn
+    [db [_ user]]
+    (tre/info "Logging in" (:username user))
+    db))
+
+(register-handler
+  :create-user
+  (fn
+    [db [_ user]]
+    (syncer/create-user! user)
+    db))

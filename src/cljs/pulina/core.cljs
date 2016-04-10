@@ -2,8 +2,9 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [reagent.core :as reagent]
             [mount.core :as m]
-            [re-frame.core :refer [dispatch-sync]]
+            [re-frame.core :refer [dispatch-sync subscribe]]
             [pulina.view-components :as view]
+            [pulina.login :as login]
             [pulina.subscriptions]
             [pulina.events]
             [pulina.data.data-syncer]))
@@ -14,13 +15,18 @@
 
 (defn pulina-app-view
   []
-  [:div#content
-   [view/header]
-   [:div#view
-    [view/chat-channels]
-    [:div#messages
-     [view/messages-list]
-     [view/message-input]]]])
+  (let [current-user (subscribe [:current-user])]
+    (fn pulina-app-view-render
+      []
+      (if (some? @current-user)
+        [:div#content
+         [view/header]
+         [:div#view
+          [view/chat-channels]
+          [:div#messages
+           [view/messages-list]
+           [view/message-input]]]]
+        [login/login]))))
 
 
 ;; -- Entry Point -------------------------------------------------------------

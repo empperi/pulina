@@ -20,17 +20,20 @@
              :flex-direction dir})])
 
 (def body         (rule :body))
+(def login        (rule :#login))
 (def header       (rule :header))
-(def app-wrapper  (rule :div#app))
-(def content-wrap (rule :div#content))
-(def view-wrapper (rule :div#view))
+(def app-wrapper  (rule :#app))
+(def content-wrap (rule :#content))
+(def view-wrapper (rule :#view))
 (def chan-btn     (rule :.channel-btn))
-(def messages     (rule :div#messages))
+(def messages     (rule :#messages))
 (def msg-input    (rule :#msg-input))
 (def new-chat     (rule :.new-chat))
 (def current-user (rule :#current-user))
 
-(defstyles all
+; ---- General styles -----------------------------
+
+(defstyles layout
   (body {:font-family "Helvetica"
          :padding     0
          :margin      0
@@ -39,6 +42,8 @@
          :top         0
          :right       0
          :bottom      0})
+
+  [:h1 {:font-size "1.2rem"}]
 
   (flex-wrap :column {})
 
@@ -73,8 +78,55 @@
                  :top      0
                  :height   "35px"
                  :width    "125px"
-                 :background-color "red"})
+                 :background-color "red"}))
 
+(defstyles form-components
+  [:.label-input
+   {:display         "flex"
+    :width           "100%"
+    :justify-content "space-between"
+    :margin-bottom   "4px"}
+   [:input {:width "70%"}]])
+
+
+; ---- View styles -------------------------------
+
+(defstyles login-styles
+  (login
+    {:position         "absolute"
+     :width            "100%"
+     :height           "100%"
+     :background-color bg-color-dark}
+
+    [:.login-box
+     {:width            "400px"
+      :margin-left      "auto"
+      :margin-right     "auto"
+      :margin-top       "50px"
+      :padding          "10px"
+      :border-radius    "5px"
+      :background-color bg-color-light}]
+
+    [:.login-btn
+     {:margin-left "auto"
+      :margin-right "auto"
+      :width "140px"
+      :display "block"
+      :margin-top "15px"}]
+
+    [:.no-account
+     {:width "150px"
+      :display  "block"
+      :margin-top  "15px"
+      :margin-left "auto"
+      :margin-right "auto"}]
+
+    [:.btns
+     {:margin-top "15px"
+      :display    "flex"
+      :justify-content "space-between"}]))
+
+(defstyles chat-view
   (chan-btn {:width  "140px"
              :height "1.8rem"})
   (messages
@@ -102,3 +154,9 @@
                   :margin "5px 5px"}]
 
     [:#msg-input-field {:flex-grow 1}]))
+
+(defstyles all
+  layout
+  form-components
+  chat-view
+  login-styles)

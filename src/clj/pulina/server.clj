@@ -7,9 +7,10 @@
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.params :refer [wrap-params]]
             [pulina.pages.index-page :as index]
-            [pulina.data.datamodel :as datamodel]))
+            [pulina.data.comms :as dc]
+            [pulina.data.schedulers]))
 
-(let [{:keys [get-ws-handler post-handler]} (datamodel/route-handlers)]
+(let [{:keys [get-ws-handler post-handler]} (dc/route-handlers)]
   (c/defroutes handlers
     (c/GET "/" [] index/page)
     (c/GET  "/chsk" req (get-ws-handler  req))

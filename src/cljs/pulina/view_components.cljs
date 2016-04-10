@@ -1,24 +1,9 @@
 (ns pulina.view-components
   (:require [reagent.core :as reagent]
+            [pulina.form-components :as fc]
             [re-frame.core :refer [dispatch
                                    dispatch-sync
                                    subscribe]]))
-
-(def ENTER_KEY 13)
-
-(defn- on-enter [f & args]
-  (fn [e]
-    (let [code (-> e .-charCode)]
-      (if (= ENTER_KEY code)
-        (do
-          (.preventDefault e)
-          (apply f args))
-        e))))
-
-(defn- on-change-update [ratom]
-  (fn [e]
-    (.preventDefault e)
-    (reset! ratom (-> e .-target .-value))))
 
 (defn new-chat
   []
@@ -36,8 +21,8 @@
            {:type "text"
             :placeholder "Channel name..."
             :value @input-val
-            :on-change (on-change-update input-val)
-            :on-key-press (on-enter join-chan)}]
+            :on-change (fc/on-change-update input-val)
+            :on-key-press (fc/on-enter join-chan)}]
           [:button
            {:on-click #(join-chan)}
            "Join"]]
@@ -101,8 +86,8 @@
        [:input#msg-input-field
         {:type         "text"
          :value        @msg-input-val
-         :on-change    (on-change-update msg-input-val)
-         :on-key-press (on-enter send-msg)}]
+         :on-change    (fc/on-change-update msg-input-val)
+         :on-key-press (fc/on-enter send-msg)}]
        [:button
         {:on-click send-msg}
         "Send"]])))
