@@ -4,34 +4,58 @@
             [clojure.string :as st]
             [com.rpl.specter :as sp]
             [pulina.data.data-syncer :as syncer]
-            [re-frame.core :refer [register-handler
+            [pulina.transit-xhr :as xhr]
+            [re-frame.core :refer [reg-event-db
+                                   reg-event-fx
+                                   reg-fx
                                    path
                                    register-sub
                                    dispatch
                                    dispatch-sync
                                    subscribe]]
-            [taoensso.timbre :as tre]))
+            [taoensso.timbre :as tre]
+            [mount.core :as m]
+            [pulina.data.websocket :as ws]))
 
-(def server-data-keys #{:channels})
+(def server-data-keys #{:channels :users})
 
 (def initial-state
   {:active-channel nil
    :channels       []})
 
-(register-handler
+(reg-fx :init-ws-connection
+  (fn []
+    (tre/info "Initializing websocket communications")
+    (m/start)))
+
+(reg-fx :xhr-send
+  (fn
+    [{:keys [path data method on-success on-failure]}]
+    (xhr/transit-xhr {:method method
+                      :url path
+                      :data data
+                      :on-complete #(dispatch [on-success %])
+                      :on-failure  #(dispatch [on-failure %])})))
+
+(reg-fx :ws-send
+  (fn
+    [event]
+    (ws/chsk-send! event)))
+
+(reg-event-db
   :initialize
   (fn
     [db _]
     (merge db initial-state)))
 
-(register-handler
+(reg-event-db
   :channel-selected
   (fn
     [db [_ channel]]
     (tre/debug "Changing channel:" (:name channel))
     (assoc-in db [:active-channel] (:name channel))))
 
-(register-handler
+(reg-event-db
   :server-data
   (fn
     [db [_ data]]
@@ -44,14 +68,14 @@
         (dispatch [:channel-selected (first (:channels res))]))
       res)))
 
-(register-handler
+(reg-event-db
   :sending-message
   (fn
     [db [_ chan-name msg]]
     (syncer/send-msg! chan-name msg)
     db))
 
-(register-handler
+(reg-event-db
   :new-message
   (fn
     [db [_ {:keys [name]} msg]]
@@ -59,14 +83,14 @@
       (dispatch [:sending-message name msg]))
     db))
 
-(register-handler
+(reg-event-db
   :new-channel
   (fn
     [db [_ chan-name]]
     (syncer/create-channel! chan-name)
     db))
 
-(register-handler
+(reg-event-db
   :join-channel
   (fn
     [db [_ chan-name]]
@@ -79,16 +103,31 @@
     (dispatch [:channel-selected {:name chan-name}])
     db))
 
-(register-handler
+(reg-event-fx
   :login
   (fn
-    [db [_ user]]
-    (tre/info "Logging in" (:username user))
-    db))
+    [{db :db} [_ user]]
+    {:xhr-send {:path "/login"
+                :method :post
+                :data user
+                :on-success :login-succeeded
+                :on-failure :login-failed}}))
 
-(register-handler
+(reg-event-fx
+  :login-succeeded
+  (fn
+    [{db :db} [_ user]]
+    (tre/info "Login succeeded " user)
+    {:init-ws-connection []
+     :ws-send [:model/all]
+     :db      (assoc-in db [:current-user] user)}))
+
+(reg-event-fx
   :create-user
   (fn
-    [db [_ user]]
-    (syncer/create-user! user)
-    db))
+    [{db :db} [_ user]]
+    {:xhr-send {:path "/user"
+                :method :post
+                :data user
+                :on-success :user-created
+                :on-failure :user-creation-failed}}))

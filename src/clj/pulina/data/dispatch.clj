@@ -14,13 +14,13 @@
   (dc/chsk-send! uid [:model/all (puu/model->map (puu/get-version model/mgr :latest))]))
 
 (defmethod dispatch! :event/new-msg
-  [{[chan-name msg] :?data}]
+  [{[chan-name msg] :?data, uid :uid}]
   (puu/do-tx
     model/mgr
     (fn [x]
       (sp/transform
         [:channels sp/ALL #(= chan-name (:name %)) :messages]
-        #(conj % msg)
+        #(conj % {:msg msg :user uid})
         x))))
 
 (defmethod dispatch! :event/new-chan
@@ -36,18 +36,6 @@
                some?)
         x
         (update-in x [:channels] conj {:name chan-name :messages []})))))
-
-(defmethod dispatch! :event/create-user
-  [{[user] :?data}]
-  (tre/info "Creating user" (dissoc user :password))
-  (model/add-user-pwd! (:username user) (:password user))
-  (puu/do-tx
-    model/mgr
-    (fn [x]
-      (update-in x [:users] (fn [users]
-                              (if (nil? users)
-                                [(dissoc user :password)]
-                                (conj users (dissoc user :password))))))))
 
 (defmethod dispatch! :default
   [{id :id}]

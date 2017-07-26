@@ -139,9 +139,20 @@
                   {:flex-grow 1
                    :overflow-y "auto"})
      [:&>li
-      {:padding "5px"
+      {:display "block"
        :margin-bottom "2px"
-       :background-color bg-color-msg}]])
+       :background-color bg-color-msg}
+
+      [:.user
+       {:display "inline-block"
+        :padding "4px"
+        :height "100%"
+        :margin "0px 5px 0px 0px"
+        :background-color (rgb 230 230 230)
+        :border-right "solid black 1px"}]
+
+      [:.msg
+       {:background-color bg-color-msg}]]])
 
   (msg-input
     {:padding 0

@@ -37,6 +37,9 @@
       [:div#current-user
        [:span (:name @current-user)]])))
 
+(defn usernname->nickname [users username]
+  (:name (first (filter #(= username (:username %)) users))))
+
 (defn header
   []
   (let [x 1]
@@ -61,6 +64,7 @@
 (defn messages-list
   []
   (let [active-chan (subscribe [:active-channel])
+        users       (subscribe [:users])
         msgs        (subscribe [:messages])]
     (fn messages-list-render
       []
@@ -69,7 +73,8 @@
          (map-indexed
            (fn [idx msg] [:li
                           {:key (str (:name @active-chan) "-" idx)}
-                          msg])
+                          [:span.user (usernname->nickname @users (:user msg))]
+                          [:span.msg (:msg msg)]])
            @msgs))])))
 
 (defn message-input

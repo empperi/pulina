@@ -8,3 +8,12 @@
 
 (defn add-user-pwd! [username pwd]
   (swap! password-db assoc username pwd))
+
+(defn check-login [username pwd]
+  (= pwd (get @password-db username)))
+
+(defn uid->user [uid]
+  (first
+    (filter
+      #(= (:username %) uid)
+      (:users @mgr))))

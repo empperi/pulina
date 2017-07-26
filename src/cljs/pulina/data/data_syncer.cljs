@@ -3,12 +3,12 @@
     [cljs.core.async.macros :as asyncm :refer [go go-loop]])
   (:require
     [mount.core :as m]
-    [cljs.pprint]
     [taoensso.timbre :as tre]
-    [re-frame.core :refer [dispatch]]
+    [re-frame.core :refer [dispatch reg-fx reg-event-fx]]
     [cljs.core.async :as async :refer [<! >! put! chan]]
     [taoensso.sente :as sente :refer [cb-success?]]
-    [puu.model :as puu]))
+    [puu.model :as puu]
+    [pulina.data.websocket :as ws]))
 
 (def mgr
   (puu/manager
@@ -16,17 +16,6 @@
     (puu/model {})))
 
 (def changes (puu/subscribe mgr (chan)))
-
-(let [{:keys [chsk ch-recv send-fn state]}
-      (sente/make-channel-socket! "/chsk" {:type :auto})]
-  (def chsk       chsk)
-  (def ch-chsk    ch-recv)
-  (def chsk-send! send-fn)
-  (def chsk-state state))
-
-(defn init-model! []
-  (tre/info "Initializing model data")
-  (chsk-send! [:model/all] 8000))
 
 ; ---------------------------------------
 ; communication event dispatching
@@ -42,52 +31,37 @@
   (tre/debug "Received model changeset:" changes)
   (puu/apply-changeset mgr changes))
 
-; ---------------------------------------
-; websocket communication and dispatching
-(defmulti dispatch! :id)
-
-(defmethod dispatch! :chsk/state
-  [{data :?data}]
-  (cond
-    (:first-open? data) (init-model!)
-    :default nil))
-
-(defmethod dispatch! :chsk/recv
-  [{data :?data}]
-  (event-dispatch! data))
-
-(defmethod dispatch! :default
+(defmethod event-dispatch! :default
   [d]
-  (tre/warn "No dispatch handler found for " (:id d)))
+  (tre/warn "No comms dispatch handler for " d))
 
+(reg-fx :data-event-dispatch
+  (fn
+    [data]
+    (event-dispatch! data)))
 
-; --------------------------------------
-; channel listeners
-(defn start-receiver! []
-  (go-loop [i 0]
-    (let [d (<! ch-chsk)]
-      (dispatch! d))
-    (recur (inc i))))
+(reg-event-fx :server-chsk-dispatch
+  (fn
+    [_ [_ data]]
+    {:data-event-dispatch data}))
+
+; ---- API functions -------------------
+(defn send-msg! [chan-name msg]
+  (ws/chsk-send! [:event/new-msg [chan-name msg]]))
+
+(defn create-channel! [chan-name]
+  (ws/chsk-send! [:event/new-chan [chan-name]]))
+
+(defn create-user! [user]
+  (ws/chsk-send! [:event/create-user [user]]))
 
 (defn start-broadcaster! []
+  (tre/info "Starting model changes broadcaster")
   (go-loop [i 0]
     (let [d (<! changes)]
       (tre/trace "Triggered change" @d)
       (dispatch [:server-data @d]))
     (recur (inc i))))
 
-; ---- API functions -------------------
-(defn send-msg! [chan-name msg]
-  (chsk-send! [:event/new-msg [chan-name msg]]))
-
-(defn create-channel! [chan-name]
-  (chsk-send! [:event/new-chan [chan-name]]))
-
-(defn create-user! [user]
-  (chsk-send! [:event/create-user [user]]))
-
-(m/defstate receiver :start (start-receiver!)
-                     :stop  (async/close! @receiver))
-
 (m/defstate broadcaster :start (start-broadcaster!)
-                        :stop  (async/close! @broadcaster))
+            :stop (async/close! @broadcaster))

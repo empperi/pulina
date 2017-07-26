@@ -3,7 +3,7 @@
   (:require [reagent.core :as reagent]
             [re-frame.core :refer [register-handler
                                    path
-                                   register-sub
+                                   reg-sub
                                    dispatch
                                    dispatch-sync
                                    subscribe]]))
@@ -11,37 +11,35 @@
 (defn name-for? [n] (fn [c] (= n (:name c))))
 
 (defn- active-channel [db]
-  (let [active (reaction (:active-channel @db))]
-    (reaction (first (filter (name-for? @active) (:channels @db))))))
+  (let [active (:active-channel db)]
+    (first (filter (name-for? active) (:channels db)))))
 
-(register-sub
+(reg-sub
   :channels
   (fn
     [db _]
-    (reaction (:channels @db))))
+    (:channels db)))
 
-(register-sub
+(reg-sub
   :active-channel
   (fn
     [db _]
     (active-channel db)))
 
-(register-sub
+(reg-sub
   :messages
   (fn
     [db _]
-    (let [active-channel (active-channel db)]
-      (reaction (:messages @active-channel)))))
+    (-> db active-channel :messages)))
 
-(register-sub
+(reg-sub
   :users
   (fn
-    [db _]
-    (reaction (:users @db))))
+    [db x]
+    (:users db)))
 
-(register-sub
+(reg-sub
   :current-user
   (fn
     [db _]
-    (let [current-user (reaction (:current-user @db))]
-      (reaction (first (filter (name-for? @current-user) (:users @db)))))))
+    (:current-user db)))

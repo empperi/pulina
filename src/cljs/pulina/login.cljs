@@ -39,7 +39,7 @@
        [:input.login-btn
         {:type "submit"
          :value "Login"
-         :on-click (fn [e] (.preventDefault e) (dispatch-sync [:login @form-data]) e)}]
+         :on-click (fn [e] (.preventDefault e) (dispatch [:login @form-data]) e)}]
        [:div.no-account
         [:a
          {:href "#"
