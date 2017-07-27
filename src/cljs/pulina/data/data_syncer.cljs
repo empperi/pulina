@@ -8,7 +8,8 @@
     [cljs.core.async :as async :refer [<! >! put! chan]]
     [taoensso.sente :as sente :refer [cb-success?]]
     [puu.model :as puu]
-    [pulina.data.websocket :as ws]))
+    [pulina.data.websocket :as ws]
+    [clojure.walk :as w]))
 
 (def mgr
   (puu/manager
@@ -24,32 +25,26 @@
 ; communication event dispatching
 (defmulti event-dispatch! first)
 
+(defn messages-as-sorted [data]
+  (w/postwalk
+    (fn [node]
+      (if (sequential? node)
+        (let [[key value] node]
+          (if (= key :messages)
+            [:messages (into (sorted-map-by (fn [a b] (< (first a) (first b)))) value)]
+            node))
+        node))
+    data))
+
 (defmethod event-dispatch! :model/all
   [[_ data]]
   (tre/debug "Received initial model data: " data)
-  (puu/do-tx mgr (fn [_]
-                   ; we need to convert the messages map into sorted map so that they'll get ordered correctly
-                   ; the type of sorted-map is lost in the transit serialization and thus we need to recreate it here.
-                   ; After this initial fumbling all the new messages will get applied to this data structure and thus
-                   ; they will get ordered correctly. The reason for using a map in the first place as data structure
-                   ; comes from the diffing algorithm: this allows it to just tell about single added element and
-                   ; index of the insertion is not important: this reduces the amount of data sent between changesets.
-                   (update
-                     (:data data)
-                     :channels
-                     (fn [channels]
-                       (map
-                         (fn [chan]
-                           (update
-                             chan
-                             :messages
-                             #(into (sorted-map-by (fn [a b] (< (first a) (first b)))) %)))
-                         channels))))))
+  (puu/do-tx mgr (fn [_] (messages-as-sorted (:data data)))))
 
 (defmethod event-dispatch! :model/changes
   [[_ changes]]
   (tre/debug "Received model changeset:" changes)
-  (puu/apply-changeset mgr changes))
+  (puu/apply-changeset mgr (messages-as-sorted changes)))
 
 (defmethod event-dispatch! :default
   [d]

@@ -37,7 +37,7 @@
   (body {:font-family "Helvetica"
          :padding     0
          :margin      0
-         :position    "absolute"
+         :position    "fixed"
          :left        0
          :top         0
          :right       0
@@ -57,7 +57,9 @@
 
   (view-wrapper
     {:display        "flex"
-     :flex-grow      1}
+     :flex-grow      1
+     ; Edge/Firefox fix, they actually follow the spec which is a bit broken in this part...
+     :min-height     0}
     [:.channels {:order            1
                  :border-right     "1px solid black"
                  :background-color bg-color-dark}
