@@ -147,9 +147,25 @@
                   {:flex-grow 1
                    :overflow-y "auto"})
      [:&>li
-      {:display "block"
+      {:display "flex"
+       :align-items "stretch"
        :margin-bottom "2px"
        :background-color bg-color-msg}
+
+      [:.msg-info
+       {:order 1
+        :background-color (rgb 230 230 230)
+        :display "flex"
+        :align-items "center"
+        :border-right "solid black 1px"
+        :margin-right "5px"}]
+
+      [:.msg
+       {:order 2
+        :align-self "center"
+        :padding-top "3px"
+        :padding-bottom "3px"
+        :flex-grow 1}]
 
       [:&.own-msg
        {:background-color (rgb 236 247 223)}
@@ -157,20 +173,23 @@
        [:.user
         {:font-weight "bold"}]]
 
+      [:.time
+       {:width      "60px"
+        :text-align "center"
+        :font-size  "0.75rem"}]
+
       [:.user
        {:display "inline-block"
         :padding "4px"
-        :height "100%"
-        :margin "0px 5px 0px 0px"
-        :background-color (rgb 230 230 230)
-        :border-right "solid black 1px"}]]])
+        :margin "0px 0px 0px 0px"}]]])
 
   (msg-input
     {:padding 0
      :margin 0
      :border 0
      :background-color "white"
-     :display "flex"}
+     :display "flex"
+     :flex-basis "70px"}
 
     [:.chan-name {:font-size "0.8rem"
                   :margin "5px 5px"}]
