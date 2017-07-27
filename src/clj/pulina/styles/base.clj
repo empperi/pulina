@@ -77,8 +77,16 @@
                  :right    0
                  :top      0
                  :height   "35px"
-                 :width    "125px"
-                 :background-color "red"}))
+                 :width    "170px"
+                 :background-color (rgb 90 82 70)}
+    [:span
+     {:position    "absolute"
+      :color       "white"
+      :left        "50%"
+      :margin-left "-25%"
+      :top         "0.5rem"
+      :display     "inline-block"
+      :font-weight "bold"}]))
 
 (defstyles form-components
   [:.label-input
@@ -143,16 +151,19 @@
        :margin-bottom "2px"
        :background-color bg-color-msg}
 
+      [:&.own-msg
+       {:background-color (rgb 236 247 223)}
+
+       [:.user
+        {:font-weight "bold"}]]
+
       [:.user
        {:display "inline-block"
         :padding "4px"
         :height "100%"
         :margin "0px 5px 0px 0px"
         :background-color (rgb 230 230 230)
-        :border-right "solid black 1px"}]
-
-      [:.msg
-       {:background-color bg-color-msg}]]])
+        :border-right "solid black 1px"}]]])
 
   (msg-input
     {:padding 0

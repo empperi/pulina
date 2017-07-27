@@ -12,6 +12,7 @@
                   [hiccup "1.0.5"]
                   [garden "1.3.2"]
                   [re-frame "0.9.4"]
+                  [com.andrewmcveigh/cljs-time "0.5.0"]
                   [ring-middleware-format "0.7.2"]
                   [com.cognitect/transit-cljs "0.8.239"]
                   [com.rpl/specter "0.9.2"]

@@ -20,7 +20,13 @@
     (fn [x]
       (sp/transform
         [:channels sp/ALL #(= chan-name (:name %)) :messages]
-        #(conj % {:msg msg :user uid})
+        ; this is an optimization to use map with such weird keys: this allows the diffing algorithm
+        ; to pass just the changed data without having to tell the exact index of vector or list where
+        ; the element has been added. With maps diff can just say "add"
+        #(assoc % [(System/currentTimeMillis), uid] msg)
+        #_#(conj % {:msg msg
+                  :user uid
+                  :timestamp (System/currentTimeMillis)})
         x))))
 
 (defmethod dispatch! :event/new-chan
@@ -35,7 +41,7 @@
                first
                some?)
         x
-        (update-in x [:channels] conj {:name chan-name :messages []})))))
+        (update-in x [:channels] conj {:name chan-name :messages (sorted-map-by (fn [a b] (< (first a) (first b))))})))))
 
 (defmethod dispatch! :default
   [{id :id}]

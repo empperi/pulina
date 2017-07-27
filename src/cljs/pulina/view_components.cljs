@@ -1,9 +1,15 @@
 (ns pulina.view-components
   (:require [reagent.core :as reagent]
             [pulina.form-components :as fc]
+            [cljs-time.core :as t]
+            [cljs-time.format :as tf]
+            [cljs-time.coerce :as tc]
             [re-frame.core :refer [dispatch
                                    dispatch-sync
                                    subscribe]]))
+
+(def time-of-day-formatter (tf/formatter "HH:mm:ss"))
+(def day-of-month-formatter (tf/formatter "dd MMM yyyy"))
 
 (defn new-chat
   []
@@ -63,18 +69,21 @@
 
 (defn messages-list
   []
-  (let [active-chan (subscribe [:active-channel])
-        users       (subscribe [:users])
-        msgs        (subscribe [:messages])]
+  (let [active-chan  (subscribe [:active-channel])
+        users        (subscribe [:users])
+        current-user (subscribe [:current-user])
+        msgs         (subscribe [:messages])]
     (fn messages-list-render
       []
       [:ul.messages
        (doall
          (map-indexed
-           (fn [idx msg] [:li
-                          {:key (str (:name @active-chan) "-" idx)}
-                          [:span.user (usernname->nickname @users (:user msg))]
-                          [:span.msg (:msg msg)]])
+           (fn [idx [[timestamp user] msg]] [:li
+                          {:key (str (:name @active-chan) "-" idx)
+                           :class (if (= (:username @current-user) user) "own-msg" "")}
+                          [:span.time (tf/unparse time-of-day-formatter (t/to-default-time-zone (tc/from-long timestamp)))]
+                          [:span.user (usernname->nickname @users user)]
+                          [:span.msg msg]])
            @msgs))])))
 
 (defn message-input
