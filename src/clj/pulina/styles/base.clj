@@ -191,7 +191,7 @@
      :border 0
      :background-color "white"
      :display "flex"
-     :flex-basis "70px"}
+     :min-height "25px"}
 
     [:.chan-name {:font-size "0.8rem"
                   :margin "5px 5px"}]
