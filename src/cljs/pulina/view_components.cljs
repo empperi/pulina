@@ -75,38 +75,55 @@
   ;; at-end?: element.scrollHeight - element.scrollTop === element.clientHeight
   (> tolerance (- (.-scrollHeight el) (.-scrollTop el) (.-clientHeight el))))
 
-(defn messages-list
-  []
-  (let [active-chan   (subscribe [:active-channel])
-        users         (subscribe [:users])
-        current-user  (subscribe [:current-user])
-        msgs          (subscribe [:messages])
-        should-scroll (reagent/atom true)]
+(defn channel-messages-list
+  [channel]
+  (let [users            (subscribe [:users])
+        current-user     (subscribe [:current-user])
+        msgs             (subscribe [:messages])
+        notify-new-msgs  (reagent/atom false)
+        should-scroll    (reagent/atom true)
+        scroll-listen-fn (reagent/atom nil)]
     (reagent/create-class
       {:display-name "messages-list"
        :component-did-mount (fn [this]
                               (let [n (reagent/dom-node this)]
-                                (scroll! n [0 (.-scrollTop n)] [0 (.-scrollHeight n)] 0)))
+                                (scroll! n [0 (.-scrollTop n)] [0 (.-scrollHeight n)] 0)
+                                (reset! scroll-listen-fn (fn []
+                                                           (when (scrolled-to-end? n 100)
+                                                             (dispatch [:messages/all-read (:name channel)]))))
+                                (.log js/console n)
+                                (.addEventListener n "scroll" @scroll-listen-fn)))
        :component-will-update (fn [this]
                                 (let [n (reagent/dom-node this)]
-                                  (reset! should-scroll (scrolled-to-end? n 100))))
+                                  (reset! should-scroll (scrolled-to-end? n 100))
+                                  (when (not (scrolled-to-end? n 100))
+                                    (dispatch [:messages/unread-available (:name channel)]))))
        :component-did-update (fn [this]
-                               (let [n       (reagent/dom-node this)]
+                               (let [n             (reagent/dom-node this)]
                                  (when @should-scroll
                                    (scroll! n [0 (.-scrollTop n)] [0 (.-scrollHeight n)] 600))))
-       :render (fn []
-                 [:ul.messages
+       :component-will-unmount (fn [this]
+                                 (let [n (reagent/dom-node this)]
+                                   (.removeEventListener n "scroll" @scroll-listen-fn)
+                                   (reset! scroll-listen-fn nil)))
+       :render (fn [channel]
+                 [:ul.messages {:key (:name channel)}
                   (doall
                     (map-indexed
                       (fn [idx [[timestamp user] msg]]
                         [:li
-                         {:key   (str (:name @active-chan) "-" idx)
+                         {:key   idx
                           :class (if (= (:username @current-user) user) "own-msg" "")}
                          [:span.msg-info
                           [:span.time (tf/unparse time-of-day-formatter (t/to-default-time-zone (tc/from-long timestamp)))]
                           [:span.user (usernname->nickname @users user)]]
                          [:span.msg msg]])
                       @msgs))])})))
+
+(defn messages-list
+  []
+  (let [active-chan   (subscribe [:active-channel])]
+    ^{:key (str "messages-" (:name @active-chan))} [channel-messages-list @active-chan]))
 
 (defn message-input
   []
@@ -127,3 +144,12 @@
        [:button
         {:on-click send-msg}
         "Send"]])))
+
+(defn unread-messages
+  []
+  (let [unread-msgs?   (subscribe [:unread-messages])]
+    (fn unread-messages-render
+      []
+      (println @unread-msgs?)
+      (when @unread-msgs?
+        [:div "You have unread messages"]))))

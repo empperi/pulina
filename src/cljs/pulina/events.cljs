@@ -131,3 +131,28 @@
                 :data user
                 :on-success :user-created
                 :on-failure :user-creation-failed}}))
+
+(reg-event-db
+  :messages/unread-available
+  (fn
+    [db [_ chan-name]]
+    (update db :channels (fn [chans]
+                           (map
+                             (fn [chan]
+                               (if (= chan-name (:name chan))
+                                 (assoc chan :unread-messages true)
+                                 chan))
+                             chans)))
+    db))
+
+(reg-event-db
+  :messages/all-read
+  (fn
+    [db [_ chan-name]]
+    (update db :channels (fn [chans]
+                           (map
+                             (fn [chan]
+                               (if (= chan-name (:name chan))
+                                 (assoc chan :unread-messages false)
+                                 chan))
+                             chans)))))

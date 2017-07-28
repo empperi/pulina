@@ -43,3 +43,9 @@
   (fn
     [db _]
     (:current-user db)))
+
+(reg-sub
+  :unread-messages
+  (fn
+    [db]
+    (:unread-messages (first (filter #(= (:name (active-channel db)) (:name %)) (:channels db))))))

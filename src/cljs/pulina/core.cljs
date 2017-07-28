@@ -23,6 +23,7 @@
          [:div#view
           [view/chat-channels]
           [:div#messages
+           [view/unread-messages]
            [view/messages-list]
            [view/message-input]]]]
         [login/login]))))
